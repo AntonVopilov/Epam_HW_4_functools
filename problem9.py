@@ -58,7 +58,7 @@ def prob40_reduce():
 
 print('problem 9:', prob9())
 print('problem 6:', prob6(100))
-print('problem 48:', prob48(10))
+print('problem 48:', prob48(1000))
 print('problem 40:', prob40_reduce())
 
 

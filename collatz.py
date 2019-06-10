@@ -12,3 +12,10 @@ def collatz_steps(n: int):
 
 
 print(collatz_steps(44))
+
+def collatz(n):
+    make_step = lambda val,counter: counter if val == 1 else make_step(val/2, counter + 1) if val % 2 == 0 \
+        else make_step(val*3 + 1, counter + 1)
+    return make_step(n,0)
+
+print(collatz(44))
