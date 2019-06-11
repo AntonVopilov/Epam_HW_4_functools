@@ -30,34 +30,48 @@ def make_cache(size=10):
         return inner
     return decorator
 
-def make_cache_time(tm):
 
+def make_cache_time(tm):
     def decorator(func):
         cache = {}
-        make_cache_time.end = datetime.now() + timedelta(seconds=tm)
+
+        t0 = None
         @functools.wraps(func)
         def inner(*args, **kwargs):
+            nonlocal t0
 
-            if datetime.now() > make_cache_time.end:
+            t1 = time.time()
+
+            if t0 is None:
+                t0 = t1
+
+            if t1 - t0 > tm:
                 cache.clear()
+                t0 = t1
 
             key = args_to_key(args, kwargs)
             if key in cache:
                 return cache[key]
             else:
                 cache[key] = func(*args, **kwargs)
-                return func(*args, **kwargs)
+                return cache[key]
+
         return inner
+
     return decorator
 
-@make_cache_time(10)
+
+
+
+@make_cache_time(80)
 def slow_func(*args, **kwargs):
-    time.sleep(1)
+    time.sleep(2)
     return args, len(kwargs)
 
-@make_cache_time(10)
+@make_cache_time(8)
 def slow_func_2(*args, **kwargs):
-    time.sleep(1)
+    time.sleep(2)
     return args, len(kwargs)
+
 
 
