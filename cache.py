@@ -2,7 +2,7 @@
 import functools
 from collections import OrderedDict
 import time
-
+from datetime import datetime, timedelta
 
 def args_to_key(args, kwargs):
     res = OrderedDict(sorted(kwargs.items()))
@@ -30,14 +30,26 @@ def make_cache(size=10):
         return inner
     return decorator
 
+def make_cache_time(tm):
+    cache = {}
+    make_cache_time.end = datetime.now() + timedelta(seconds=tm)
 
-@make_cache(size=30)
+    def decorator(func):
+        @functools.wraps(func)
+        def inner(*args, **kwargs):
+            key = args_to_key(args, kwargs)
+            if key in cache:
+                return cache[key]
+            else:
+                if datetime.now() > make_cache_time.end:
+                    cache.clear()
+                cache[key] = func(*args, **kwargs)
+                return func(*args, **kwargs)
+        return inner
+    return decorator
+
+@make_cache_time(5)
 def slow_func(*args, **kwargs):
     time.sleep(1)
-    return len(args), len(kwargs)
+    return args, len(kwargs)
 
-print(slow_func(1, 2, 3, a=4, b=5))
-print(slow_func(1, 2, 4, a=4, b=5))
-print(slow_func(1, 2, 3, a=4, b=5))
-print(slow_func(1, 2, 3, c=4, b=5))
-print(slow_func(1, 2, 3, c=4, b=5))
