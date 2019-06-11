@@ -30,13 +30,11 @@ def make_cache(size=10):
         return inner
     return decorator
 
-
 def make_cache_time(tm):
 
     def decorator(func):
         cache = {}
         make_cache_time.end = datetime.now() + timedelta(seconds=tm)
-        
         @functools.wraps(func)
         def inner(*args, **kwargs):
 
@@ -51,4 +49,15 @@ def make_cache_time(tm):
                 return func(*args, **kwargs)
         return inner
     return decorator
+
+@make_cache_time(10)
+def slow_func(*args, **kwargs):
+    time.sleep(1)
+    return args, len(kwargs)
+
+@make_cache_time(10)
+def slow_func_2(*args, **kwargs):
+    time.sleep(1)
+    return args, len(kwargs)
+
 
