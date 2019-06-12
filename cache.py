@@ -35,31 +35,27 @@ def make_cache_time(tm):
     def decorator(func):
         cache = {}
 
-        t0 = None
-
         @functools.wraps(func)
         def inner(*args, **kwargs):
-            nonlocal t0
 
             t1 = time.time()
 
-            if not t0:
-                t0 = t1
-
-            if t1 - t0 > tm:
-                cache.clear()
-                t0 = t1
-                print('clear')
-
-            print(t1-t0)
             key = args_to_key(args, kwargs)
             if key in cache:
                 print('use cache', key)
-                return cache[key]
+                t0 = cache[key][1]
+                if t1 - t0 > tm:
+                    print('rewrite', func.__name__, cache)
+                    print(t1-t0)
+                    cache[key] = func(*args, **kwargs), t1
+                    print('after rewrite', func.__name__, cache)
+                    return cache[key]
+                else:
+                    return cache[key]
             else:
-                print('calc func', key)
-                cache[key] = func(*args, **kwargs)
-                return cache[key]
+                cache[key] = func(*args, **kwargs), t1
+                print('calc func', func.__name__, cache)
+                return cache[key][0]
 
         return inner
 
@@ -68,30 +64,21 @@ def make_cache_time(tm):
 
 
 
+import random
+@make_cache_time(0.5)
+def a_1(b):
+    return random.choice(range(20))
 
-@make_cache_time(80)
-def slow_func(*args, **kwargs):
-    time.sleep(2)
-    return args, len(kwargs)
 
-@make_cache_time(6)
-def slow_func_2(*args, **kwargs):
-    time.sleep(2)
-    return args, len(kwargs)
+@make_cache_time(5)
+def a_2(b):
+    return random.choice(range(20))
 
-print(slow_func(1,2,3))
-print(slow_func(1,2,171))
-print(slow_func_2(1,2,10))
-print(slow_func_2(1,2,11))
-
-print(slow_func(1,2,4))
-print(slow_func(1,2,5))
-print(slow_func(1,2,3))
-print(slow_func(1,2,6))
-print(slow_func(1,2,7))
-print(slow_func(1,2,8))
-print(slow_func(1,2,9))
-print(slow_func_2(1,2,10))
+for i in range(5):
+    time.sleep(0.25)
+    print('a_1(i), a_2(i) = ', a_1(i), a_2(i))
+for i in range(5):
+    print('a_1(i), a_2(i) = ',a_1(i), a_2(i))
 
 
 
