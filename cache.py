@@ -1,8 +1,9 @@
 
 import functools
+import random
 from collections import OrderedDict
 import time
-from datetime import datetime, timedelta
+
 
 def args_to_key(args, kwargs):
     res = OrderedDict(sorted(kwargs.items()))
@@ -37,24 +38,13 @@ def make_cache_time(tm):
 
         @functools.wraps(func)
         def inner(*args, **kwargs):
-
             t1 = time.time()
-
             key = args_to_key(args, kwargs)
-            if key in cache:
-                print('use cache', key)
-                t0 = cache[key][1]
-                if t1 - t0 > tm:
-                    print('rewrite', func.__name__, cache)
-                    print(t1-t0)
-                    cache[key] = func(*args, **kwargs), t1
-                    print('after rewrite', func.__name__, cache)
-                    return cache[key]
-                else:
-                    return cache[key]
+
+            if (key in cache) and t1 - cache[key][1] < tm:
+                return cache[key][0]
             else:
                 cache[key] = func(*args, **kwargs), t1
-                print('calc func', func.__name__, cache)
                 return cache[key][0]
 
         return inner
@@ -62,9 +52,6 @@ def make_cache_time(tm):
     return decorator
 
 
-
-
-import random
 @make_cache_time(0.5)
 def a_1(b):
     return random.choice(range(20))
@@ -74,9 +61,11 @@ def a_1(b):
 def a_2(b):
     return random.choice(range(20))
 
+
 for i in range(5):
     time.sleep(0.25)
     print('a_1(i), a_2(i) = ', a_1(i), a_2(i))
+
 for i in range(5):
     print('a_1(i), a_2(i) = ',a_1(i), a_2(i))
 
